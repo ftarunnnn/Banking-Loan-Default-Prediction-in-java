@@ -7,7 +7,7 @@ import weka.filters.unsupervised.attribute.StringToNominal;
 
 /**
  * Phase 4: Categorical Encoder for encoding categorical features into nominal
- * representation and optional One-Hot Binary vectors.
+ * representation and optional One-Hot Binary vectors using Weka 3.8.6 API.
  */
 public class CategoricalEncoder {
 
@@ -22,9 +22,9 @@ public class CategoricalEncoder {
     public static Instances encodeCategoricalFeatures(Instances dataset, boolean applyOneHot) throws Exception {
         System.out.println("Starting Phase 4 Categorical Feature Encoding...");
 
-        // 1. Ensure all String attributes are converted to Nominal
+        // 1. Convert all String attributes to Nominal
         StringToNominal stringToNominal = new StringToNominal();
-        stringToNominal.setAttributeIndices("first-last");
+        stringToNominal.setAttributeRange("first-last");
         stringToNominal.setInputFormat(dataset);
         Instances nominalDataset = Filter.useFilter(dataset, stringToNominal);
         System.out.println("Converted string attributes to Nominal indices.");
@@ -33,9 +33,8 @@ public class CategoricalEncoder {
             return nominalDataset;
         }
 
-        // 2. Apply One-Hot Encoding (NominalToBinary) for linear models like Logistic Regression
+        // 2. Apply One-Hot Encoding (NominalToBinary)
         NominalToBinary nominalToBinary = new NominalToBinary();
-        nominalToBinary.setIgnoreClass(true); // Preserve target class attribute
         nominalToBinary.setInputFormat(nominalDataset);
         Instances binaryDataset = Filter.useFilter(nominalDataset, nominalToBinary);
 
