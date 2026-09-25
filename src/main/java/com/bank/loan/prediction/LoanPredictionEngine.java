@@ -9,7 +9,8 @@ import weka.core.Instances;
 /**
  * Phase 9: Real-time Loan Prediction Engine.
  * Accepts raw customer input attributes, builds Weka Instance matching trained dataset schema,
- * performs model inference, calculates default probability, and evaluates credit risk decision.
+ * normalizes numeric attributes, performs model inference, calculates default probability,
+ * and evaluates credit risk decision.
  */
 public class LoanPredictionEngine {
 
@@ -61,17 +62,17 @@ public class LoanPredictionEngine {
         Instance instance = new DenseInstance(datasetHeader.numAttributes());
         instance.setDataset(datasetHeader);
 
-        // Set attribute values matching dataset schema
-        setValueIfPresent(instance, "age", age);
-        setValueIfPresent(instance, "income", income);
-        setValueIfPresent(instance, "employment_length", employmentLength);
-        setValueIfPresent(instance, "loan_amount", loanAmount);
-        setValueIfPresent(instance, "loan_term", loanTerm);
-        setValueIfPresent(instance, "interest_rate", interestRate);
-        setValueIfPresent(instance, "credit_score", creditScore);
-        setValueIfPresent(instance, "dti_ratio", dtiRatio);
-        setValueIfPresent(instance, "existing_loans", existingLoans);
-        setValueIfPresent(instance, "previous_defaults", previousDefaults);
+        // Normalize inputs relative to expected domain min/max scale
+        setValueIfPresent(instance, "age", scale(age, 21, 70));
+        setValueIfPresent(instance, "income", scale(income, 18000, 200000));
+        setValueIfPresent(instance, "employment_length", scale(employmentLength, 0, 40));
+        setValueIfPresent(instance, "loan_amount", scale(loanAmount, 3000, 90000));
+        setValueIfPresent(instance, "loan_term", scale(loanTerm, 12, 60));
+        setValueIfPresent(instance, "interest_rate", scale(interestRate, 5.0, 25.0));
+        setValueIfPresent(instance, "credit_score", scale(creditScore, 300, 850));
+        setValueIfPresent(instance, "dti_ratio", scale(dtiRatio, 0.05, 0.70));
+        setValueIfPresent(instance, "existing_loans", scale(existingLoans, 0, 6));
+        setValueIfPresent(instance, "previous_defaults", scale(previousDefaults, 0, 3));
 
         setNominalIfPresent(instance, "employment_type", employmentType);
         setNominalIfPresent(instance, "education", education);
@@ -105,6 +106,12 @@ public class LoanPredictionEngine {
         }
 
         return new PredictionResult(defaultCode, defaultLabel, defaultProb, riskScore, decision);
+    }
+
+    private double scale(double val, double min, double max) {
+        if (max == min) return 0.0;
+        double s = (val - min) / (max - min);
+        return Math.max(0.0, Math.min(1.0, s));
     }
 
     private void setValueIfPresent(Instance inst, String attrName, double val) {
